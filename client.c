@@ -18,6 +18,8 @@
 
 #define MAXDATASIZE 100 // max number of bytes we can get at once 
 
+static char input[2048];
+
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
 {
@@ -36,8 +38,11 @@ int main(int argc, char *argv[])
     int rv;
     char s[INET6_ADDRSTRLEN];
 
+    puts("MyFTP Version 0.0.0.1");
+    puts("Press Ctrl+c to Exit\n");
+
     if (argc != 2) {
-        fprintf(stderr,"usage: client hostname\n");
+        fprintf(stderr,"myftp >  [ERROR] usage: client hostname\n");
         exit(1);
     }
 
@@ -46,7 +51,7 @@ int main(int argc, char *argv[])
     hints.ai_socktype = SOCK_STREAM;
 
     if ((rv = getaddrinfo(argv[1], PORT, &hints, &servinfo)) != 0) {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+        fprintf(stderr, "myftp >  [ERROR] getaddrinfo: %s\n", gai_strerror(rv));
         return 1;
     }
 
@@ -54,13 +59,13 @@ int main(int argc, char *argv[])
     for(p = servinfo; p != NULL; p = p->ai_next) {
         if ((sockfd = socket(p->ai_family, p->ai_socktype,
                 p->ai_protocol)) == -1) {
-            perror("client: socket");
+            perror("myftp > [ERROR] client: socket");
             continue;
         }
 
         if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
             close(sockfd);
-            perror("client: connect");
+            perror("myftp > [ERROR] client: connect");
             continue;
         }
 
@@ -68,26 +73,44 @@ int main(int argc, char *argv[])
     }
 
     if (p == NULL) {
-        fprintf(stderr, "client: failed to connect\n");
+        fprintf(stderr, "myftp > [ERROR] client: failed to connect\n");
         return 2;
     }
 
     inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
             s, sizeof s);
-    printf("client: connecting to %s\n", s);
+    printf("myftp > client: connecting to %s\n", s);
 
     freeaddrinfo(servinfo); // all done with this structure
 
     if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
-        perror("recv");
+        perror("myftp > [ERROR] recv");
         exit(1);
     }
 
     buf[numbytes] = '\0';
 
-    printf("client: received '%s'\n",buf);
+    printf("myftp > client: received '%s'\n",buf);
 
     //add prompt here ...
+    while(1) {
+	    // Output our prompt
+	    fputs("myftp > ", stdout);
+
+	    //Read a line of user input of maximum size 2049
+	    fgets(input, 2048, stdin);
+
+	    //parse input remove the \n
+	    strtok(input, "\n");
+	    
+	    if (strcmp(input, "exit") == 0) 
+		    break;
+
+    	    if (send(sockfd, input, 13, 0) == -1) {
+	    	    perror("myftp > [ERROR] send");
+	    }
+	   
+    }
 
     close(sockfd);
 

@@ -19,6 +19,8 @@
 
 #define BACKLOG 10     // how many pending connections queue will hold
 
+#define MAXDATASIZE 100 //max number of bytes we can get at once
+
 void sigchld_handler(int s)
 {
     // waitpid() might overwrite errno, so we save and restore it:
@@ -43,12 +45,14 @@ void *get_in_addr(struct sockaddr *sa)
 int main(void)
 {
     int sockfd, new_fd;  // listen on sock_fd, new connection on new_fd
+    int numbytes; //new addition
     struct addrinfo hints, *servinfo, *p;
     struct sockaddr_storage their_addr; // connector's address information
     socklen_t sin_size;
     struct sigaction sa;
     int yes=1;
     char s[INET6_ADDRSTRLEN];
+    char buf[MAXDATASIZE]; //new addition
     int rv;
 
     memset(&hints, 0, sizeof hints);
@@ -123,11 +127,25 @@ int main(void)
             close(sockfd); // child doesn't need the listener
             if (send(new_fd, "Hello, world!", 13, 0) == -1)
                 perror("send");
+	    
+	    //add demo print function here
+	    while (1) {
+	    	if ((numbytes = recv(new_fd, buf, MAXDATASIZE-1, 0)) == -1) {
+			perror("recv");
+			exit(1);
+	    	}
+		if (numbytes == 0)
+			break;
+	    	buf[numbytes] = '\0';
+	    	printf("server: received '%s'\n", buf);
+
+	    }
+
+	    printf("Properly close child socket");
             close(new_fd);
             exit(0);
         }
 	
-	//add demo print function here
 
         close(new_fd);  // parent doesn't need this
     }
