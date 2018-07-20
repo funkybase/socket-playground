@@ -138,6 +138,10 @@ int main(void)
 			break;
 	    	buf[numbytes] = '\0';
 	    	printf("server: received '%s'\n", buf);
+		if (strcpy(buf, "get") == 0) {
+			printf("sending file\n");
+		}
+		
 
 	    }
 
