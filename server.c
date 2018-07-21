@@ -137,8 +137,10 @@ int main(void)
 		if (numbytes == 0)
 			break;
 	    	buf[numbytes] = '\0';
+
 	    	printf("server: received '%s'\n", buf);
-		if (strcpy(buf, "get") == 0) {
+		//tokenize here
+		if (strcpy(buf, "get\0") == 0) {
 			printf("sending file\n");
 		}
 		

@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include "common.h"
 
 #include <arpa/inet.h>
 
@@ -105,9 +106,50 @@ int main(int argc, char *argv[])
 	    
 	    if (strcmp(input, "exit") == 0) 
 		    break;
-
+	    
     	    if (send(sockfd, input, 13, 0) == -1) {
 	    	    perror("myftp > [ERROR] send");
+	    }
+
+	    char *token = strtok(input, " ");
+	    int i = 0;
+	    char *args[5];
+
+	    while (token != NULL) {
+		    args[i++] = token;
+		    token = strtok(NULL, " ");
+	    }
+
+	    if (strcmp(args[0], "lcd") == 0) {
+		    if(args[1] == NULL) {
+			    fprintf(stderr, "myftp > expected argument to \"lcd\"\n");
+		    } else {
+		    	if(chdir(args[1]) != 0) 
+				perror("myftp > [ERROR] ");
+		    }
+		    continue;
+	    } 
+
+	    if (strcmp(args[0], "lpwd") == 0){
+		    //print working directory
+		    continue;
+	    }
+		
+	    if (strcmp(args[0], "ldir") == 0) {
+		    //print ls
+		    continue;
+	    }
+
+	    if (strcmp(args[0], "get") == 0) {
+		    //download/recv file
+		    //recv_file(args[1], sockfd);
+		    continue;
+	    }
+	    
+	    if (strcmp (args[0], "put") == 0) {
+		    //upload/send file
+		    send_file(args[1], sockfd);
+		    continue;
 	    }
 	   
     }
